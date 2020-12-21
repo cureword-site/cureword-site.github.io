@@ -99,7 +99,7 @@
                 if (resp.status === 200) {
                   // console.log(resp);
                   // console.log(resp.data);
-                  this.message = resp.data.words;
+                  this.message = resp.data.words.reverse();
                   loading.close();
                   this.isLoading = false;
                 } else {
