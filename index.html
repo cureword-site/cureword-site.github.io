@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CureWords - 心灵鸡汤</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link
+      href="https://fonts.googleapis.com/css?family=Noto+Sans+SC"
+      rel="stylesheet"
+    />
+    <!-- 引入elementui样式 -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"
+    />
+    <!-- 引入fontawsome -->
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <canvas id="canvas"> </canvas>
+    <div class="box">
+      <div class="main-box">
+        <p class="main-font">CureWords - 心灵鸡汤</p>
+        <div class="codebox">
+          <div class="contcard">
+            <div class="avaterimg">
+              <span
+                class="el-avatar el-avatar--square"
+                style="height: 70px; width: 70px; line-height: 70px;"
+                ><img
+                  src="https://gitee.com/im0o/photobed/raw/master/img/20200727163358.png"
+                  style="object-fit: cover;"
+              /></span>
+            </div>
+            <div class="textss">
+              <p>本站语录大部分收录于 MCBBS论坛中 每日一水心灵鸡汤 有效语录<br />
+              原帖地址：<a href="https://www.mcbbs.net/thread-1105827-1-1.html">https://www.mcbbs.net/thread-1105827-1-1.html</a><br />
+              如需投稿，请联系站长 0ojixueseno0 投稿前请保证使用 WTFPL 开源协议</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div v-for="i in this.message" :key="i" class="curebox">
+            <ul class="fa-ul">
+              <li style="text-align: center"><i class="fa-li fa fa-cube" style="font-size: 20px; margin-left: 4px;"></i>{{ i }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- vue开发环境版本，包含了有帮助的命令行警告 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <!-- vue生产环境版本，优化了尺寸和速度 -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+    <!-- 引入axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- 引入elementui组件库 -->
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <script>
+      var app = new Vue({
+        el: ".box",
+        data: {
+          message: [],
+          isLoading: false,
+        },
+        methods: {
+          // loading() {
+          //     axios.get('http://127.0.0.1:8443/api?appid=test&secret=test&value=getword')
+          //       .then(({ data }) => {
+          //         console.log(data)
+          //       })
+          //       .catch(console.error)
+          // }
+          loading() {
+            const loading = this.$loading({
+              lock: true,
+              text: "正在努力熬煮鸡汤..."
+            });
+            this.isLoading = true;
+            setTimeout(() => {
+              loading.close();
+              if (this.isLoading == true) {
+                this.$message({
+                  showClose: true,
+                  message: "连接超时 请尝试刷新或联系站长",
+                  type: "error"
+                });
+                this.isLoading = false;
+              }
+            }, 10000);
+            axios
+              .get(
+                "http://api.cureword.top:256/api?value=getword&appid=test&secret=test"
+              ) //need to change url
+              .then((resp) => {
+                if (resp.status === 200) {
+                  // console.log(resp);
+                  // console.log(resp.data);
+                  this.message = resp.data.words;
+                  loading.close();
+                  this.isLoading = false;
+                } else {
+                  this.$message({
+                    showClose: true,
+                    message: "哎呀 鸡汤在来的路上洒了 请重新熬一碗吧",
+                    type: "error"
+                  });
+                  loading.close();
+                  this.isLoading = false;
+                  // console.log(this.productinfos);
+                }
+              })
+              // fetch('http://abc.im0o.top:14771/getword')
+              //   .then( (res) => {  return res.json() } )//对fetch进行格式化，否则读取不到内容
+              //   .then( (data) => { this.productinfos = data; loading.close(); } )//拿到格式化后的数据data
+              .catch((error) => {
+                console.log(error);
+                this.$message({
+                  showClose: true,
+                  message: "未知错误，请联系站长",
+                  type: "error"
+                });
+                loading.close();
+                this.isLoading = false;
+              });
+          },
+        },
+        created() {
+          this.loading();
+        },
+      });
+    </script>
+    <script>
+      function random(low, high) {
+        return Math.random() * (high - low) + low;
+      }
+
+      class Visual {
+        constructor() {
+          this.canvas = document.querySelector("#canvas");
+          this.context = this.canvas.getContext("2d");
+          this.canvasWidth = 0;
+          this.canvasHeight = 0;
+          this.particleLength = 150;
+          this.particles = [];
+          this.particleMaxRadius = 8;
+          this.handleResizeBind = this.handleResize.bind(this);
+
+          this.initialize();
+          this.render();
+        }
+
+        initialize() {
+          this.resizeCanvas();
+          for (let i = 0; i < this.particleLength; i++) {
+            this.particles.push(this.createParticle(i));
+          }
+          this.bind();
+        }
+
+        bind() {
+          window.addEventListener("resize", this.handleResizeBind, false);
+        }
+
+        unbind() {
+          window.removeEventListener("resize", this.handleResizeBind, false);
+        }
+
+        handleResize() {
+          this.resizeCanvas();
+        }
+
+        resizeCanvas() {
+          this.canvasWidth = document.body.offsetWidth;
+          this.canvasHeight = document.body.offsetHeight;
+          this.canvas.width = this.canvasWidth * window.devicePixelRatio;
+          this.canvas.height = this.canvasHeight * window.devicePixelRatio;
+          this.context = this.canvas.getContext("2d");
+          this.context.scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+
+        createParticle(id, isRecreate) {
+          const radius = random(1, this.particleMaxRadius);
+          const x = isRecreate
+            ? -radius - random(this.particleMaxRadius * 2, this.canvasWidth)
+            : random(0, this.canvasWidth);
+          let y = random(
+            this.canvasHeight / 2 - 150,
+            this.canvasHeight / 2 + 150
+          );
+          y += random(-100, 100);
+          const alpha = random(0.05, 1);
+
+          return {
+            id: id,
+            x: x,
+            y: y,
+            startY: y,
+            radius: radius,
+            defaultRadius: radius,
+            startAngle: 0,
+            endAngle: Math.PI * 2,
+            alpha: alpha,
+            color: { r: random(0, 100), g: random(0, 100), b: 255 },
+            speed: alpha + 1,
+            amplitude: random(50, 200),
+            isBurst: false,
+          };
+        }
+
+        drawParticles() {
+          this.particles.forEach((particle) => {
+            // 位置情報更新
+            this.moveParticle(particle);
+            // particle描画
+            this.context.beginPath();
+            this.context.fillStyle = `rgba(${particle.color.r}, ${particle.color.g}, ${particle.color.b}, ${particle.alpha})`;
+            this.context.arc(
+              particle.x,
+              particle.y,
+              particle.radius,
+              particle.startAngle,
+              particle.endAngle
+            );
+            this.context.fill();
+          });
+        }
+
+        moveParticle(particle) {
+          particle.x += particle.speed;
+          particle.y =
+            particle.startY +
+            particle.amplitude * Math.sin(((particle.x / 5) * Math.PI) / 180);
+        }
+
+        render() {
+          // canvas初期化
+          this.context.clearRect(
+            0,
+            0,
+            this.canvasWidth + this.particleMaxRadius * 2,
+            this.canvasHeight
+          );
+
+          // particleを描画
+          this.drawParticles();
+
+          // 画面から消えたら新しいparticleに差し替え
+          this.particles.forEach((particle) => {
+            if (particle.x - particle.radius >= this.canvasWidth) {
+              this.particles[particle.id] = this.createParticle(
+                particle.id,
+                true
+              );
+            }
+          });
+
+          requestAnimationFrame(this.render.bind(this));
+        }
+      }
+
+      new Visual();
+    </script>
+  </body>
+</html>
