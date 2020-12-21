@@ -93,7 +93,7 @@
             }, 10000);
             axios
               .get(
-                "http://api.cureword.top:256/api?value=getword&appid=test&secret=test"
+                "http://api.cureword.top:256/api?value=getword&appid=${{ secrets.APPID }}&secret=${{ secrets.SECRET }}"
               ) //need to change url
               .then((resp) => {
                 if (resp.status === 200) {
